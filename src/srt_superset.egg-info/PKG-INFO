@@ -1,0 +1,23 @@
+Metadata-Version: 2.1
+Name: srt-superset
+Version: 0.0.1
+Summary: A SRT superset data analysis tools
+Author: Adam Buckingham
+Author-email: adam.buckingham@gsa.gov
+License: CC0 1.0 Universal
+Platform: unix
+Platform: linux
+Platform: osx
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=3.10
+Requires-Dist: Authlib==1.2.1
+Requires-Dist: flask-oidc==2.0.3
+Requires-Dist: gunicorn[gevent]==21.2.0
+Requires-Dist: gunicorn==21.2.0
+Requires-Dist: marshmallow-enum==1.5.1
+Requires-Dist: Pillow==10.0.1
+Requires-Dist: psycopg2==2.9.7
+Requires-Dist: requests==2.31.0
+Provides-Extra: testing
+Requires-Dist: pytest; extra == "testing"
+Requires-Dist: pytest-cov; extra == "testing"

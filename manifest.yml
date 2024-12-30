@@ -1,0 +1,11 @@
+---
+applications:
+- name: srt-superset
+  memory: 750M
+  disk_quota: 2G
+  instances: 1
+  health-check-type: process
+  routes:
+    - route: http://srt-superset.app.cloud.gov
+  services:
+    - srt-superset-pg
