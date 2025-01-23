@@ -1,21 +1,32 @@
-FROM apache/superset
+FROM apache/superset:latest as base
 
 USER root
 
-ADD superset_config.py /app/superset/
-ADD requirements.txt /app/superset/
-ADD bin/* /app/superset/
+WORKDIR /app/superset
+
+ADD . .
 ADD conf/passwd /etc/passwd
 
-ARG username
+ARG username=superset_admin
 ARG password
+ARG environment=development
+ENV SUPERSET_ENVIRONMENT=${environment}
+
+
 
 RUN apt-get update \
     && apt-get upgrade -y 
 
-RUN pip install -r /app/superset/requirements.txt
+
+RUN pip install --upgrade pip
+
+RUN pip install -r requirements.txt
+RUN pip install -e .
 
 ENV SUPERSET_CONFIG_PATH=/app/superset/superset_config.py
+
+RUN chmod +x ./bin/environment_secrets.sh
+RUN ./bin/environment_secrets.sh
 
 #RUN superset superset db upgrade
 
@@ -28,7 +39,12 @@ ENV SUPERSET_CONFIG_PATH=/app/superset/superset_config.py
 
 EXPOSE 8080
 
-RUN chmod +x /app/superset/start_superset.sh
+FROM base as initialize-superset
+    RUN chmod +x ./bin/start_superset_init.sh
+    ENTRYPOINT ["./bin/start_superset_init.sh"]
+    CMD ["${username}", "${password}"]
 
-CMD ["/app/superset/start_superset.sh"]
+FROM base as superset
+    RUN chmod +x ./bin/start_superset.sh
+    CMD ["./bin/start_superset.sh"]
 

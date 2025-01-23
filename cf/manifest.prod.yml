@@ -1,0 +1,9 @@
+---
+applications:
+- name: srt-superset-prod
+  memory: 1GB
+  disk_quota: 4GB
+  no-route: true
+  health-check-type: process
+  services:
+    - srt-postgresql15-prod

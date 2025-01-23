@@ -1,0 +1,15 @@
+---
+applications:
+- name: srt-superset-dev
+  memory: 1GB
+  disk_quota: 4GB
+  no-route: true
+  health-check-type: process
+  routes:
+    - route: http://srt-superset-dev.app.cloud.gov
+  services:
+    - srt-superset-pg-dev
+  env:
+    REDIRECT_URL: 'http://srt-superset-dev.app.cloud.gov/oauth-authorized/login_gov'
+    SUPERSET_CLIENT_ID: 'urn:gov:gsa:openidconnect.profiles:sp:sso:office_of_government_wide_policy:srt_superset'
+    SUPERSET_CONFIG_PATH: '/app/superset/superset_config.py'

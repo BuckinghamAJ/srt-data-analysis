@@ -1,7 +1,5 @@
+apache-superset[gevent, postgres, thumbnails]
+APScheduler==3.11.0
 Authlib==1.2.1
-gunicorn[gevent]==21.2.0
-gunicorn==21.2.0
 marshmallow-enum==1.5.1
-Pillow==10.0.1
-psycopg2==2.9.7
 requests==2.31.0

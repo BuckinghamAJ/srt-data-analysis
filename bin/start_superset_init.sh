@@ -1,8 +1,8 @@
 #!/bin/sh
 
 superset db upgrade
-superset fab create-admin --username $SUPERSET_USER --password $SUPERSET_PASSWORD --firstname Superset --lastname Admin --email srt@gsa.gov
-superset load_examples
+superset fab create-admin --username $1 --password $2 --firstname Superset --lastname Admin --email srt@gsa.gov
+#superset load_examples
 superset init
 
 gunicorn -w 3 \

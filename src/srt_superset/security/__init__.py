@@ -7,9 +7,21 @@ import logging
 logger = logging.getLogger()
 
 
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+
 def generate_client_assertion(client_id, token_endpoint):
-    private_key = os.getenv('SUPERSET_SECRET_KEY', 'YOUR_OWN_RANDOM_GENERATED_SECRET_KEY')
-    private_key = bytes(private_key, 'utf-8')
+    cert_path = os.path.join(os.path.dirname(__file__), '../../../certs/')
+    
+    private_key = None
+
+    with open(os.path.join(cert_path, 'private.pem'), 'rb') as f:
+        private_key = serialization.load_pem_private_key(
+            f.read(),
+            password=None,
+            backend=default_backend()
+        )
 
     jwt_id = generate_token(32)
     now = datetime.utcnow()

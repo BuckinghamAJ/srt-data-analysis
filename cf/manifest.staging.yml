@@ -1,0 +1,9 @@
+---
+applications:
+- name: srt-superset-staging
+  memory: 512MB
+  disk_quota: 4GB
+  no-route: true
+  health-check-type: process
+  services:
+    - srt-postgres15-staging

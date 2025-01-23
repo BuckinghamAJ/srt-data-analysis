@@ -2,8 +2,11 @@ import os
 from flask_appbuilder.security.manager import AUTH_OAUTH, AUTH_OID
 from dotenv import load_dotenv
 from srt_superset.security import OIDCSecurityManager, CustomSsoSecurityManager, generate_client_assertion
+from apscheduler.schedulers.gevent import GeventScheduler
 
+background_scheduler = GeventScheduler()
 load_dotenv()  # take environment variables from .env.
+
 
 
 # Superset specific config
@@ -11,6 +14,10 @@ load_dotenv()  # take environment variables from .env.
 # export SUPERSET_CONFIG_PATH=/path/to/superset_config.py
 
 ROW_LIMIT = 5000
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+CERT_DIR = os.path.join(BASE_DIR, 'certs')
+CONF_DIR = os.path.join(BASE_DIR, 'conf')
 
 # Flask App Builder configuration
 # Your App secret key will be used for securely signing the session cookie
@@ -23,8 +30,13 @@ SECRET_KEY = os.getenv('SUPERSET_SECRET_KEY', 'YOUR_OWN_RANDOM_GENERATED_SECRET_
 
 
 # COOKIES
-SESSION_COOKIE_SAMESITE = None
-SESSION_COOKIE_HTTPONLY = False
+debug = True if os.getenv('DEBUG') == 'True' else False
+
+if debug:
+      SESSION_COOKIE_SAMESITE = None
+      SESSION_COOKIE_SECURE = False 
+      SESSION_COOKIE_HTTPONLY = False
+
 
 # The SQLAlchemy connection string to your database backend
 # This connection defines the path to the database that stores your
@@ -44,7 +56,7 @@ if db_string:
       SQLALCHEMY_DATABASE_URI = db_string 
 
 # Flask-WTF flag for CSRF
-WTF_CSRF_ENABLED = True
+WTF_CSRF_ENABLED = True if not debug else False
 # Add endpoints that need to be exempt from CSRF protection
 WTF_CSRF_EXEMPT_LIST = []
 # A CSRF token that expires in 1 year
@@ -70,6 +82,9 @@ gunicorn -w 10 \
 AUTH_TYPE = AUTH_OAUTH
 
 SUPERSET_CLIENT_ID= os.getenv('SUPERSET_CLIENT_ID')
+NONCE_SECRET = os.getenv('NONCE_SECRET')
+
+REDIRECT_URL = os.getenv('REDIRECT_URL')
 
 OAUTH_PROVIDERS = [
     {   'name':'login_gov',
@@ -78,22 +93,31 @@ OAUTH_PROVIDERS = [
         'remote_app': {
           'client_id':SUPERSET_CLIENT_ID,  # Client Id (Identify Superset application)
           #'client_secret':'MySecret', # Secret for this Client Id (Identify Superset application)
+          'api_base_url': 'https://idp.int.identitysandbox.gov/api/',
           'server_metadata_url': 'https://idp.int.identitysandbox.gov/.well-known/openid-configuration',
-          'request_token_params':{
+          "jwks_uri": 'https://idp.int.identitysandbox.gov/api/openid_connect/certs',
+          'access_token_url':'https://idp.int.identitysandbox.gov/api/openid_connect/token',
+          'access_token_params':{
                 'client_assertion': generate_client_assertion(SUPERSET_CLIENT_ID, 'https://idp.int.identitysandbox.gov/api/openid_connect/token'),
                 'client_assertion_type': 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
                 'grant_type': 'authorization_code'
           },
           'authorize_params':{
                 'acr_values':'http://idmanagement.gov/ns/assurance/ial/1',
-                'scope': 'openid',               # Scope for the Authorization
-                'nonce': 'elNRk06wJh4F7XmN8Fy4yq12345',
-                'redirect_uri':"http://localhost:8088/oauth-authorized/login_gov"
+                'scope': 'openid email profile',               # Scope for the Authorization
+                'nonce': NONCE_SECRET,
+                'redirect_uri': REDIRECT_URL
             },
       }        
     }
 ]
 
+def update_client_assertion():
+      client_assertion = generate_client_assertion(SUPERSET_CLIENT_ID, 'https://idp.int.identitysandbox.gov/api/openid_connect/token')
+      OAUTH_PROVIDERS[0]['remote_app']['access_token_params']['client_assertion'] = client_assertion
+
+background_scheduler.add_job(update_client_assertion, 'interval', minutes=4)
+background_scheduler.start()
 
 # Will allow user self registration, allowing to create Flask users from Authorized User
 AUTH_USER_REGISTRATION = True
@@ -106,7 +130,7 @@ CUSTOM_SECURITY_MANAGER = OIDCSecurityManager
 
 OIDC_INTROSPECTION_AUTH_METHOD='bearer'
 OIDC_TOKEN_TYPE_HINT = 'access_token'
-OIDC_CLIENT_SECRETS='conf/client_secrets.json'
+OIDC_CLIENT_SECRETS= os.path.join(CONF_DIR, 'client_secrets.json')
 OIDC_SERVER_METADATA_URL='https://idp.int.identitysandbox.gov/.well-known/openid-configuration'
 
 """
