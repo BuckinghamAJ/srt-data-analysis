@@ -1,7 +1,7 @@
-from .login_gov_security import (OIDCSecurityManager, CustomSsoSecurityManager)
+from .login_gov_security import (OIDCSecurityManager)
 import os
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from authlib.common.security import generate_token
 import logging
 logger = logging.getLogger()
@@ -24,7 +24,7 @@ def generate_client_assertion(client_id, token_endpoint):
         )
 
     jwt_id = generate_token(32)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     exp = now + timedelta(minutes=5)
 
     claims = {

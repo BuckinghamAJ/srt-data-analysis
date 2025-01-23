@@ -1,7 +1,7 @@
 import os
 from flask_appbuilder.security.manager import AUTH_OAUTH, AUTH_OID
 from dotenv import load_dotenv
-from srt_superset.security import OIDCSecurityManager, CustomSsoSecurityManager, generate_client_assertion
+from srt_superset.security import OIDCSecurityManager, generate_client_assertion
 from apscheduler.schedulers.gevent import GeventScheduler
 
 background_scheduler = GeventScheduler()
